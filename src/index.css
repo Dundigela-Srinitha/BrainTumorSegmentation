@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --medical-green-50: #f0faf4;
+  --medical-green-100: #dbf5e5;
+  --medical-green-200: #bcebd1;
+  --medical-green-300: #86d9b2;
+  --medical-green-400: #4fc08e;
+  --medical-green-500: #31a875;
+  --medical-green-600: #238660;
+  --medical-green-700: #1d6b4e;
+}
+
+body {
+  background-color: var(--medical-green-50);
+}
+
+.medical-stats {
+  @apply grid grid-cols-3 gap-4 p-4 bg-white/50 rounded-lg backdrop-blur-sm mb-6;
+}
+
+.medical-stat-item {
+  @apply flex flex-col items-center p-3 rounded-lg bg-white/80;
+}
+
+.pulse-ring {
+  @apply absolute w-full h-full rounded-full animate-ping opacity-75;
+}

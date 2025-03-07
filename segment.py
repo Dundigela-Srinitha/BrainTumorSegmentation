@@ -1,12 +1,21 @@
-import sys
+from flask import Flask, request, send_file, jsonify
+import cv2
 import numpy as np
 import tensorflow as tf
-import cv2
-from PIL import Image
+from io import BytesIO
+import os
 from keras.saving import register_keras_serializable
 from patchify import patchify
+from flask_cors import CORS
+# Suppress TensorFlow logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress INFO and WARNING logs
+tf.get_logger().setLevel('ERROR')  # Suppress TensorFlow internal logs
 
-# Register the custom loss function
+
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
+
+# Register custom loss and metric functions
 @register_keras_serializable()
 def dice_loss(y_true, y_pred):
     smooth = 1.0
@@ -15,7 +24,6 @@ def dice_loss(y_true, y_pred):
     intersection = tf.keras.backend.sum(y_true_f * y_pred_f)
     return 1 - (2.0 * intersection + smooth) / (tf.keras.backend.sum(y_true_f) + tf.keras.backend.sum(y_pred_f) + smooth)
 
-# Register the custom metric function
 @register_keras_serializable()
 def dice_coef(y_true, y_pred):
     smooth = 1.0
@@ -32,7 +40,7 @@ try:
     print("Model loaded successfully.")
 except Exception as e:
     print(f"Error loading model: {e}")
-    sys.exit(1)
+    exit(1)
 
 # Configuration
 cf = {
@@ -60,12 +68,16 @@ def patchify_image(image):
     patches = np.expand_dims(patches, axis=0)
     return patches
 
-def segment_image(input_path, output_path):
+@app.route('/api/segment', methods=['POST'])
+def segment():
     try:
-        print(f"Reading image from: {input_path}")
-        image = cv2.imread(input_path, cv2.IMREAD_COLOR)
-        if image is None:
-            raise ValueError("Could not read the image file.")
+        # Check if an image file is uploaded
+        if 'image' not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+
+        # Read the uploaded image file
+        file = request.files['image']
+        image = cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR)
 
         # Preprocess the image
         processed_image = preprocess_image(image)
@@ -91,24 +103,16 @@ def segment_image(input_path, output_path):
         # Merge the input image with the red mask
         merged_image = cv2.addWeighted(image, 0.7, red_mask, 0.3, 0)
 
-        print("Saving output image...")
-        cv2.imwrite(output_path, merged_image)
+        # Save the output image to a bytes buffer
+        _, buffer = cv2.imencode('.png', merged_image)
+        io_buf = BytesIO(buffer)
 
-        print("Segmentation completed successfully.")
+        # Return the image as a response
+        return send_file(io_buf, mimetype='image/png')
     except Exception as e:
         print(f"Error during segmentation: {e}")
-        raise
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python3 segment.py <input_path> <output_path>")
-        sys.exit(1)
-
-    input_path = sys.argv[1]
-    output_path = sys.argv[2]
-
-    try:
-        segment_image(input_path, output_path)
-    except Exception as e:
-        print(f"Segmentation failed: {e}")
-        sys.exit(1)
+    # Run Flask in production mode (disable debug mode)
+    app.run(host="0.0.0.0", port=5000, debug=False)

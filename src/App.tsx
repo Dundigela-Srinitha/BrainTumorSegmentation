@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Brain, Settings as Lungs, Activity, ArrowLeft, Loader2, Heart, Clock, Users } from 'lucide-react';
+import { Brain, Activity, ArrowLeft, Loader2, Heart, Clock, Users} from 'lucide-react';
 import ImageUploader from './components/ImageUploader';
 import axios from 'axios';
 
-type SegmentationType = 'brain' | 'lung' | null;
+type SegmentationType = 'brain' | null;
 
 function App() {
   const [selectedType, setSelectedType] = useState<SegmentationType>(null);
@@ -26,7 +26,7 @@ function App() {
       const response = await axios.post('http://127.0.0.1:5000/api/segment', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         responseType: 'blob',
-    });
+      });
 
       const imageBlob = new Blob([response.data], { type: 'image/png' });
       const imageUrl = URL.createObjectURL(imageBlob);
@@ -91,8 +91,8 @@ function App() {
             </div>
             <div className="medical-stat-item">
               <Users className="h-6 w-6 text-[var(--medical-green-500)] mb-2" />
-              <span className="text-sm text-gray-600">Cases Analyzed</span>
-              <span className="text-xl font-bold text-[var(--medical-green-700)]">10,000+</span>
+              <span className="text-sm text-gray-600">High Resolution</span>
+              <span className="text-xl font-bold text-[var(--medical-green-700)]">512 x 512</span>
             </div>
           </div>
         )}
@@ -102,10 +102,10 @@ function App() {
             <h2 className="text-2xl font-bold text-[var(--medical-green-700)] mb-6 text-center">
               Select Segmentation Type
             </h2>
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="flex justify-center">
               <button
                 onClick={() => setSelectedType('brain')}
-                className="group relative flex flex-col items-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-2 border-transparent hover:border-[var(--medical-green-400)]"
+                className="group relative flex flex-col items-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-2 border-transparent hover:border-[var(--medical-green-400)] max-w-md w-full"
               >
                 <div className="absolute inset-0 bg-[var(--medical-green-100)] opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
                 <Brain className="h-20 w-20 text-[var(--medical-green-500)] mb-6 relative z-10" />
@@ -116,26 +116,12 @@ function App() {
                   Advanced MRI analysis for precise tumor detection and boundary mapping
                 </p>
               </button>
-
-              <button
-                onClick={() => setSelectedType('lung')}
-                className="group relative flex flex-col items-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-2 border-transparent hover:border-[var(--medical-green-400)]"
-              >
-                <div className="absolute inset-0 bg-[var(--medical-green-100)] opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
-                <Lungs className="h-20 w-20 text-[var(--medical-green-500)] mb-6 relative z-10" />
-                <h2 className="text-2xl font-semibold text-[var(--medical-green-700)] mb-3 relative z-10">
-                  Lung Tumor Segmentation
-                </h2>
-                <p className="text-gray-600 text-center relative z-10">
-                  State-of-the-art CT scan analysis for accurate pulmonary tumor identification
-                </p>
-              </button>
             </div>
           </>
         ) : (
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-8 border border-[var(--medical-green-200)]">
             <h2 className="text-2xl font-bold text-[var(--medical-green-700)] mb-6">
-              {selectedType === 'brain' ? 'Brain' : 'Lung'} Tumor Segmentation
+              Brain Tumor Segmentation
             </h2>
 
             {!uploadedImage ? (
